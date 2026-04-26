@@ -242,37 +242,33 @@
             </div>
     </div>
 </main>
-  <script>
-    // URL Provisória (Manteremos a atual até criarmos o novo Script no Drive)
+ <script>
     const URL = "https://script.google.com/macros/s/AKfycbwSS_fVEjz3znQ--8gFV1KvetUQHyfpzfGPLWOjg2HkfgWtOPSwBIz71UxRyx-tyZhsLA/exec";
     
-    // Utilitários Básicos
+    let db = []; 
+    let acaoAtual = "";
+
+    // Utilitários
     function id(x) { return document.getElementById(x); }
     function fecharModal(m) { id(m).style.display = 'none'; }
     function modal(m) { id(m).style.display = 'flex'; }
     function load() { id('L').style.display = 'flex'; }
     function unload() { id('L').style.display = 'none'; }
     
-    // Navegação Premium (Sidebar e Cards)
+    // Navegação com Gatilhos de Carga
     function tab(t, btn) {
-        // Esconde todos os cards e tira o visual ativo dos botões
         document.querySelectorAll('.card').forEach(c => c.classList.remove('act'));
         document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('act'));
-        
-        // Ativa o card atual e o botão clicado
         id(t).classList.add('act');
         if(btn) btn.classList.add('act');
         
-        // Atualiza o título no topo
-        let titulos = {
-            'painel': 'Dashboard Geral',
-            'cadastro': 'Novo Registo e Contratos',
-            'busca': 'Base de Dados dos Clientes'
-        };
+        let titulos = { 'painel': 'Dashboard Geral', 'cadastro': 'Novo Registo e Contratos', 'busca': 'Base de Dados dos Clientes', 'ficha': 'Ficha Detalhada do Cliente' };
         id('tituloPagina').innerText = titulos[t] || 'Dashboard';
+
+        if(t === 'busca') loadCli();
     }
 
-    // Máscara e Validação de CPF
+    // Máscaras e Validação
     function mCPF(i) {
         let v = i.value.replace(/\D/g, ""); i.setAttribute("maxlength", "14");
         if(v.length > 3) v = v.replace(/(\d{3})(\d)/, "$1.$2");
@@ -280,31 +276,45 @@
         if(v.length > 9) v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
         i.value = v;
     }
-
+    
     let cpfValido = false;
     function validarCPFReal(i) {
         let cpf = i.value.replace(/[^\d]+/g, '');
-        cpfValido = false;
-        if(cpf.length === 0) return;
-        if(cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return;
-        let soma = 0, resto;
-        for (let j = 1; j <= 9; j++) soma += parseInt(cpf.substring(j-1, j)) * (11 - j);
-        resto = (soma * 10) % 11; if (resto === 10 || resto === 11) resto = 0;
-        if (resto !== parseInt(cpf.substring(9, 10))) return;
-        soma = 0; for (let j = 1; j <= 10; j++) soma += parseInt(cpf.substring(j-1, j)) * (12 - j);
-        resto = (soma * 10) % 11; if (resto === 10 || resto === 11) resto = 0;
-        if (resto !== parseInt(cpf.substring(10, 11))) return;
-        cpfValido = true;
+        cpfValido = (cpf.length === 11); 
     }
 
-    // Engenharia de Benefícios Premium
-    window.onload = () => addB("BENEFÍCIO POR INCAPACIDADE");
+    function fmtBR(d) { if(!d) return ""; let p = d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; }
+    
+    // Busca Inteligente (Primeiro Nome, Sobrenome ou CPF)
+    function busca() {
+        let q = id('q').value.toUpperCase(); 
+        let f = db.filter(x => x.Nome.toUpperCase().includes(q) || x.CPF.includes(q));
+        let t = id('tCli').querySelector('tbody'); t.innerHTML = "";
+        f.forEach(c => {
+            t.innerHTML += `<tr>
+                <td><strong>${c.Nome}</strong></td>
+                <td>${c.CPF}</td>
+                <td><span class="badge ${getBdg(c.StatusProcesso || c.FaseProcesso)}">${c.StatusProcesso || c.FaseProcesso || '-'}</span></td>
+                <td><button class="btn btn-p btn-sm" onclick="abrirFicha('${c.CPF}')">VER FICHA</button></td>
+            </tr>`;
+        });
+    }
+
+    function getBdg(s) {
+        if(!s) return "b-yellow"; s = s.toUpperCase();
+        if(s.includes("INDEFERIDO")) return "b-red";
+        if(s.includes("CONCEDIDO") || s.includes("VITÓRIA")) return "b-green";
+        return "b-blue";
+    }
+
+    // Engenharia de Benefícios
+    window.onload = () => { addB("BENEFÍCIO POR INCAPACIDADE"); };
 
     function addB(t="BENEFÍCIO POR INCAPACIDADE", d=null) {
         let i = "b_" + Date.now() + Math.floor(Math.random()*1000);
         let h = `<div class="card" style="display:block; border-left: 4px solid var(--s); margin-bottom: 15px; box-shadow: none;" id="${i}">
             <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <select class="tBen" onchange="rendB('${i}',this.value)" style="width:70%; font-weight:700; color:var(--p); border-color: transparent; background: transparent; padding: 0; font-size: 1rem;">
+                <select class="tBen" onchange="rendB('${i}',this.value)" style="width:70%; font-weight:700; color:var(--p); border:none; background:transparent;">
                     <option value="BENEFÍCIO POR INCAPACIDADE" ${t==='BENEFÍCIO POR INCAPACIDADE'?'selected':''}>INCAPACIDADE TEMPORÁRIA</option>
                     <option value="APOSENTADORIA" ${t==='APOSENTADORIA'?'selected':''}>APOSENTADORIA</option>
                     <option value="BPC" ${t==='BPC'?'selected':''}>BPC (LOAS)</option>
@@ -321,45 +331,98 @@
     function rendB(i, t, d=null) {
         let c = id('c_'+i);
         if(t === "BENEFÍCIO POR INCAPACIDADE") {
-            let cv = d?.cv || "NÃO";
             c.innerHTML = `<div class="grid-3">
                 <div><label>% Inicial</label><input type="number" class="pIni" value="${d?.pIni||30}"></div>
-                <div><label>Nº Parcelas</label><input type="number" class="paIni" value="${d?.paIni||8}"></div>
+                <div><label>Parcelas</label><input type="number" class="paIni" value="${d?.paIni||8}"></div>
                 <div><label>% Manutenção</label><input type="number" class="pApo" value="${d?.pApo||15}"></div>
-            </div>
-            <div style="margin-top:10px; border-top:1px solid var(--b); padding-top:15px;">
-                <label style="color:var(--a);">Prever Conversão para Permanente?</label>
-                <select class="cv" onchange="document.getElementById('dcv_${i}').style.display = this.value === 'SIM' ? 'grid' : 'none'">
-                    <option value="NÃO" ${cv==='NÃO'?'selected':''}>NÃO</option>
-                    <option value="SIM" ${cv==='SIM'?'selected':''}>SIM</option>
-                </select>
-            </div>
-            <div class="grid-2" id="dcv_${i}" style="display:${cv==='SIM'?'grid':'none'}; background:#f0fdf4; padding:15px; margin-top:15px; border-radius:8px; border: 1px solid #bbf7d0;">
-                <div><label>% Conv. Permanente</label><input type="number" class="pCv" value="${d?.pCv||45}"></div>
-                <div><label>Nº Parc. Integrais</label><input type="number" class="paCv" value="${d?.paCv||6}"></div>
             </div>`;
         } else {
-            c.innerHTML = `<div class="grid-2"><div><label>% Sobre Retroativo</label><input type="number" class="pRet" value="${d?.pRet||30}"></div><div><label>Nº Parc. Integrais</label><input type="number" class="pInt" value="${d?.pInt||4}"></div></div>`;
+            c.innerHTML = `<div class="grid-2"><div><label>% Retroativo</label><input type="number" class="pRet" value="${d?.pRet||30}"></div><div><label>Nº Parcelas</label><input type="number" class="pInt" value="${d?.pInt||4}"></div></div>`;
         }
     }
 
-    // Modal de Confirmação antes de Salvar
+    // Carregamento de Dados
+    function loadCli() { 
+        load(); 
+        let s = document.createElement('script'); 
+        s.src = URL + "?action=listar_clientes&callback=drawC"; 
+        document.body.appendChild(s); 
+    }
+
+    function drawC(r) {
+        unload(); db = r.data || []; 
+        busca(); 
+    }
+
+    // Ficha CRM Detalhada
+    function abrirFicha(cpf) { 
+        load(); 
+        let s = document.createElement('script'); 
+        s.src = URL + "?action=carregar_ficha&cpf=" + cpf + "&callback=drawF"; 
+        document.body.appendChild(s); 
+    }
+
+    function drawF(r) {
+        unload(); if(r.status !== "success") return alert("Erro ao carregar ficha.");
+        let c = r.cliente; tab('ficha', null);
+        id('ficha').innerHTML = `
+            <div class="card-header">FICHA: ${c.Nome} <button class="btn btn-p btn-sm" onclick="editar('${c.CPF}')">EDITAR</button></div>
+            <div class="card-body">
+                <div class="grid-3">
+                    <div><label>CPF</label><strong style="font-size:1.1rem">${c.CPF}</strong></div>
+                    <div><label>WhatsApp</label><strong style="font-size:1.1rem">${c.WhatsApp || '-'}</strong></div>
+                    <div><label>Senha GOV</label><strong style="color:var(--s); font-size:1.1rem">${c.AcessoGOV || '-'}</strong></div>
+                </div>
+                <div style="margin-top:20px;">
+                    ${c.LinkPastaPrincipal ? `<a href="${c.LinkPastaPrincipal}" target="_blank" class="btn btn-p">📂 PASTA NO DRIVE</a>` : ''}
+                    ${c.LinkPDF ? `<a href="${c.LinkPDF}" target="_blank" class="btn btn-s" style="margin-left:10px;">📄 CONTRATO ATUAL</a>` : ''}
+                </div>
+            </div>`;
+    }
+
+    // O Motor de Salvamento Completo (Corrigido)
     function preSave(ac) {
         if(!id('nome').value || !id('cpf').value || !id('nasc').value || !id('gov').value) return alert("Preencha todos os campos obrigatórios (*).");
         validarCPFReal(id('cpf')); if(!cpfValido) return alert("O CPF informado é inválido!");
+        if(document.querySelectorAll('.tBen').length === 0) return alert("Adicione pelo menos 1 regra de benefício!");
         
+        acaoAtual = ac;
         let bensHTML = "";
-        document.querySelectorAll('.ben-box, .tBen').forEach(x => {
-            if(x.classList.contains('tBen')) bensHTML += `<li>${x.value}</li>`;
-        });
+        document.querySelectorAll('.tBen').forEach(x => bensHTML += `<li>${x.value}</li>`);
         
         id('txtConf').innerHTML = `<strong>CLIENTE:</strong> ${id('nome').value.toUpperCase()}<br><strong>CPF:</strong> ${id('cpf').value}<br><strong>BENEFÍCIOS:</strong><ul>${bensHTML}</ul>`;
         modal('mConf');
     }
 
     id('btnConfSave').onclick = () => {
-        fecharModal('mConf'); 
-        alert("Simulação Concluída! O visual premium está funcionando perfeitamente. O próximo passo será conectar o novo Google Script.");
+        fecharModal('mConf'); load();
+        let bens = [], hons = {};
+        
+        document.querySelectorAll('.tBen').forEach(select => {
+            let container = select.parentElement.parentElement;
+            let t = select.value; bens.push(t);
+            if(t === "BENEFÍCIO POR INCAPACIDADE") {
+                hons[t] = {pIni: container.querySelector('.pIni').value, paIni: container.querySelector('.paIni').value, pApo: container.querySelector('.pApo').value, cv: 'NÃO'};
+            } else {
+                hons[t] = {pRet: container.querySelector('.pRet').value, pInt: container.querySelector('.pInt').value};
+            }
+        });
+
+        let p = {
+            action: acaoAtual, resp: id('user').value, nome: id('nome').value, cpf: id('cpf').value, nasc: fmtBR(id('nasc').value), zap: id('zap').value, nac: id('nac').value, estCiv: id('estCiv').value, gov: id('gov').value,
+            temRep: id('tRep').value, repNome: id('rNom').value, repCpf: id('rCpf').value, repRg: id('rRg').value, repPar: id('rPar').value,
+            formaAssinatura: id('fAssin').value, rogo: id('sRogo').value, bens: bens, hons: hons
+        };
+
+        fetch(URL, {method: 'POST', mode: 'no-cors', body: JSON.stringify(p)})
+        .then(() => {
+            alert("Operação enviada com sucesso ao servidor!");
+            unload();
+            location.reload();
+        }).catch(() => { 
+            alert("Erro de rede. Verifique a conexão."); 
+            unload(); 
+        });
     }
 </script>
 </body>
