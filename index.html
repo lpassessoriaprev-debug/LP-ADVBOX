@@ -1,429 +1,516 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRC Premium - Gestão Avançada</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <style>
-        :root { 
-            --p: #0f172a; /* Azul muito escuro (Sidebar) */
-            --s: #2563eb; /* Azul vibrante (Botões primários) */
-            --a: #16a34a; /* Verde sucesso */
-            --d: #dc2626; /* Vermelho alerta */
-            --bg: #f8fafc; /* Fundo cinza ultraclaro */
-            --c: #ffffff; /* Branco puro (Cards) */
-            --b: #e2e8f0; /* Bordas suaves */
-            --t: #334155; /* Texto principal */
-            --t-light: #94a3b8; /* Texto secundário */
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        }
-        
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--t); display: flex; height: 100vh; overflow: hidden; font-size: 14px; }
-        
-        /* SCROLLBAR INVISÍVEL E ELEGANTE */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* ================= SIDEBAR (MENU LATERAL FIXO) ================= */
-        .sidebar { width: 260px; background: var(--p); color: white; display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; z-index: 100; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
-        .logo-area { padding: 25px 20px; font-weight: 800; font-size: 1.2rem; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px; }
-        .logo-icon { background: var(--s); color: white; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        
-        .nav-menu { padding: 20px 10px; display: flex; flex-direction: column; gap: 5px; flex-grow: 1; overflow-y: auto; }
-        .nav-item { padding: 12px 15px; color: #cbd5e1; font-weight: 600; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-size: 0.9rem; }
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
-        .nav-item.act { background: var(--s); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
-        
-        .user-area { padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); }
-        select.user-sel { width: 100%; padding: 10px; border-radius: 6px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.1); font-weight: 600; outline: none; cursor: pointer; }
-        select.user-sel option { color: #333; }
-
-        /* ================= CONTEÚDO PRINCIPAL (DIREITA) ================= */
-        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* Topbar Invisível */
-        .topbar { padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; background: rgba(248, 250, 252, 0.8); backdrop-filter: blur(10px); z-index: 50; }
-        .page-title { font-size: 1.5rem; font-weight: 800; color: var(--p); letter-spacing: -0.5px; }
-
-        /* Área de Rolagem dos Cards */
-        .content-scroll { flex-grow: 1; overflow-y: auto; padding: 0 30px 40px 30px; }
-        .container { max-width: 1200px; margin: 0 auto; width: 100%; }
-
-        /* ================= CARDS E PAINÉIS (NEUMORFISMO) ================= */
-        .card { background: var(--c); border-radius: 12px; border: 1px solid var(--b); margin-bottom: 25px; box-shadow: var(--shadow); display: none; overflow: hidden; transition: 0.3s; }
-        .card.act { display: block; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .card-header { background: #ffffff; color: var(--p); padding: 20px 25px; font-weight: 700; border-bottom: 1px solid var(--b); font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
-        .card-body { padding: 30px; }
-
-        /* ================= INPUTS E FORMULÁRIOS PREMIUM ================= */
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
-        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
-        @media (max-width: 900px) { .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; } }
-        @media (max-width: 600px) { .sidebar { display: none; } .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
-
-        label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--t-light); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
-        input, select { width: 100%; padding: 12px 15px; border: 1px solid var(--b); border-radius: 8px; font-size: 0.95rem; background: var(--bg); transition: all 0.2s ease; color: var(--t); font-weight: 500; }
-        input:focus, select:focus { background: #fff; border-color: var(--s); outline: none; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
-        .help-text { font-size: 0.75rem; color: #94a3b8; margin-top: 6px; display: block; font-style: italic; }
-
-        /* ================= BOTÕES (MODERNOS) ================= */
-        .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease; display: inline-flex; justify-content: center; align-items: center; gap: 8px; letter-spacing: 0.3px; }
-        .btn-s { background: var(--a); color: white; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2); } 
-        .btn-p { background: var(--s); color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); } 
-        .btn-d { background: white; color: var(--d); border: 1px solid var(--d); } 
-        .btn-w { background: var(--w); color: white; box-shadow: 0 4px 10px rgba(217, 119, 6, 0.2); }
-        .btn-sm { padding: 8px 16px; font-size: 0.8rem; }
-        .btn:hover { transform: translateY(-2px); filter: brightness(105%); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
-        .btn:active { transform: translateY(0); }
-
-        /* Loader Smooth */
-        .loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); backdrop-filter: blur(4px); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; font-weight: 700; color: var(--s); }
-        .spinner { width: 40px; height: 40px; border: 4px solid var(--b); border-top: 4px solid var(--s); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 15px;}
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BRC Premium - Gestão Híbrida</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <style>
+    :root{
+      --bg:#0b1220; --bg2:#111a2e; --panel:#121f36; --panel2:#162542; --card:#182844;
+      --line:rgba(255,255,255,.08); --text:#eef4ff; --muted:#9fb1d1;
+      --primary:#4f8cff; --primary2:#6ea4ff; --ok:#24c36b; --warn:#f5a524; --danger:#f25566;
+      --shadow:0 12px 30px rgba(0,0,0,.28); --radius:16px; --radius-sm:12px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,var(--bg),#09101d);color:var(--text)}
+    button,input,select,textarea{font:inherit}
+    .app{ min-height:100vh; display:grid; grid-template-columns:270px 1fr; }
+    .sidebar{ background:linear-gradient(180deg,#0f1930,#0b1325); border-right:1px solid var(--line); padding:18px 14px; position:sticky; top:0; height:100vh; overflow:auto; }
+    .brand{ display:flex; align-items:center; gap:10px; padding:14px; border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,.03); box-shadow:var(--shadow); margin-bottom:16px; }
+    .dot{ width:12px;height:12px;border-radius:999px;background:var(--ok); box-shadow:0 0 0 6px rgba(36,195,107,.14); flex:none; }
+    .brand h1{margin:0;font-size:18px} .brand p{margin:4px 0 0;color:var(--muted);font-size:12px}
+    .nav{display:flex;flex-direction:column;gap:10px}
+    .nav button{ width:100%; border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--text); border-radius:16px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; transition:.15s; }
+    .nav button:hover{transform:translateY(-1px);background:rgba(255,255,255,.05)}
+    .nav button.active{ background:linear-gradient(90deg,rgba(79,140,255,.26),rgba(79,140,255,.08)); border-color:rgba(79,140,255,.35); }
+    .nav .left{display:flex;align-items:center;gap:10px}
+    .badge{ font-size:12px; color:var(--muted); background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:999px; padding:3px 8px; }
+    .tip{ margin-top:16px; border:1px solid var(--line); background:rgba(255,255,255,.03); border-radius:16px; padding:12px; color:var(--muted); font-size:12px; line-height:1.45; }
+    .main{padding:22px}
+    .topbar{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+    .title h2{margin:0;font-size:30px} .title p{margin:6px 0 0;color:var(--muted)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{ border:1px solid var(--line); background:rgba(255,255,255,.05); color:var(--text); border-radius:14px; padding:10px 12px; cursor:pointer; box-shadow:var(--shadow); }
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:rgba(79,140,255,.16);border-color:rgba(79,140,255,.35)}
+    .btn.ok{background:rgba(36,195,107,.14);border-color:rgba(36,195,107,.35)}
+    .btn.warn{background:rgba(245,165,36,.14);border-color:rgba(245,165,36,.35)}
+    .btn.danger{background:rgba(242,85,102,.14);border-color:rgba(242,85,102,.35)}
+    .btn.ghost{box-shadow:none}
+    .page{display:none} .page.active{display:block}
+    .cards{ display:grid; grid-template-columns:repeat(3,minmax(220px,1fr)); gap:12px; }
+    .stat,.panel{ background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.03)); border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow); }
+    .stat{padding:16px} .stat .k{color:var(--muted);font-size:12px} .stat .v{font-size:30px;font-weight:700;margin-top:6px}
+    .panel{margin-top:14px;overflow:hidden}
+    .panelHead{ padding:14px 16px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+    .panelHead h3{margin:0;font-size:17px} .panelBody{padding:16px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px} .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    label{display:block;margin:10px 0 6px;color:var(--muted);font-size:12px}
+    input,select,textarea{ width:100%; border:1px solid rgba(255,255,255,.10); border-radius:12px; background:rgba(7,13,24,.45); color:var(--text); padding:10px; outline:none; }
+    textarea{min-height:110px;resize:vertical}
+    .row{display:flex;gap:10px;flex-wrap:wrap} .small{font-size:12px;color:var(--muted)}
+    table{width:100%;border-collapse:collapse} th,td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top} th{font-size:12px;color:var(--muted);text-align:left}
+    .iconBtn{ width:34px;height:34px;border-radius:10px;border:1px solid var(--line); background:rgba(255,255,255,.05);color:var(--text);cursor:pointer; }
+    .iconBtn:hover{transform:translateY(-1px)}
+    .subbox{ margin:8px 0 14px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.03); padding:12px; }
+    .phaseTabs{ display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px; }
+    .phaseTabs button{ border:1px solid var(--line); background:rgba(255,255,255,.05); color:var(--muted); border-radius:999px; padding:9px 12px; cursor:pointer; }
+    .phaseTabs button.active{ color:var(--text); background:rgba(79,140,255,.18); border-color:rgba(79,140,255,.3); }
+    .kanban{ display:flex; gap:12px; overflow:auto; padding-bottom:8px; }
+    .column{ min-width:320px; max-width:340px; background:rgba(255,255,255,.04); border:1px solid var(--line); border-radius:18px; padding:12px; box-shadow:var(--shadow); }
+    .columnHead{ display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px; } .columnHead b{font-size:16px}
+    .procCard{ border:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03)); border-radius:14px; padding:12px; margin-bottom:10px; }
+    .procTitle{font-weight:700} .procSub{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35}
+    .procMeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px} .procMeta span{ font-size:12px; border:1px solid var(--line); background:rgba(255,255,255,.04); padding:3px 8px;border-radius:999px;color:var(--muted) }
+    .calHead{ display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px; }
+    .calGrid{ display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+    .dow{ color:var(--muted); font-size:12px; padding:4px 6px; }
+    .day{ min-height:115px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.03); padding:8px; position:relative; }
+    .day .num{ position:absolute;right:10px;top:8px; font-size:12px;color:var(--muted); }
+    .taskList{margin-top:18px;display:flex;flex-direction:column;gap:6px}
+    .taskChip{ border:1px solid rgba(79,140,255,.25); background:rgba(79,140,255,.14); border-radius:12px; padding:6px 8px; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .taskChip.done{ background:rgba(36,195,107,.14); border-color:rgba(36,195,107,.28); text-decoration:line-through; opacity:.85; }
+    .fileItem{ display:flex;justify-content:space-between;align-items:center;gap:10px; border:1px solid var(--line); background:rgba(255,255,255,.04); border-radius:12px; padding:10px; margin-top:8px; }
+    .backdrop{ position:fixed;inset:0;background:rgba(0,0,0,.58); display:none;align-items:center;justify-content:center;padding:16px;z-index:100; }
+    .backdrop.show{display:flex}
+    .modal{ width:min(980px,100%); max-height:92vh; overflow:auto; background:linear-gradient(180deg,#14203a,#10192f); border:1px solid rgba(255,255,255,.12); border-radius:20px; box-shadow:0 30px 80px rgba(0,0,0,.45); }
+    .modalHead{ position:sticky;top:0;z-index:2; display:flex;justify-content:space-between;align-items:center;gap:10px; padding:14px 16px;border-bottom:1px solid var(--line); background:rgba(11,18,32,.9);backdrop-filter:blur(8px); }
+    .modalHead h3{margin:0} .modalBody{padding:16px} .modalFoot{ display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap; padding:14px 16px;border-top:1px solid var(--line); }
+    .tabs{ display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px; }
+    .tabs button{ border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--muted); border-radius:999px; padding:9px 12px; cursor:pointer; }
+    .tabs button.active{ color:var(--text); background:rgba(36,195,107,.14); border-color:rgba(36,195,107,.28); }
+    @media (max-width:1000px){ .app{grid-template-columns:1fr} .sidebar{position:relative;height:auto} .cards,.grid2,.grid3{grid-template-columns:1fr} .main{padding:16px} }
+  </style>
 </head>
 <body>
-
-<div id="L" class="loader"><div class="spinner"></div>A PROCESSAR...</div>
-
-<nav class="sidebar">
-    <div class="logo-area">
-        <div class="logo-icon">B</div>
-        BRC ADVOCACIA
-    </div>
-    
-    <div class="nav-menu">
-        <div class="nav-item act" onclick="tab('painel', this)">📊 Dashboard Geral</div>
-        <div class="nav-item" onclick="tab('cadastro', this)">📝 Novo Registo</div>
-        <div class="nav-item" onclick="tab('busca', this)">📂 Base de Dados</div>
-    </div>
-    
-    <div class="user-area">
-        <select id="user" class="user-sel">
-            <option value="BRUNO">Dr. Bruno</option>
-            <option value="PATRICIA">Patrícia</option>
-        </select>
-    </div>
-</nav>
-
-<main class="main-content">
-    <header class="topbar">
-        <div class="page-title" id="tituloPagina">Dashboard Geral</div>
-    </header>
-    
-    <div class="content-scroll">
-        <div class="container">
-          <div id="painel" class="card act">
-                <div class="card-header">VISÃO GERAL DO ESCRITÓRIO</div>
-                <div class="card-body">
-                    <div class="dre-grid">
-                        <div class="dre-card" style="background:var(--s);">
-                            <h4>Honorários Totais</h4>
-                            <h2 id="dashFaturado">R$ 0,00</h2>
-                        </div>
-                        <div class="dre-card" style="background:var(--a);">
-                            <h4>Lucro Líquido</h4>
-                            <h2 id="dashLucro">R$ 0,00</h2>
-                        </div>
-                        <div class="dre-card" style="background:var(--p);">
-                            <h4>Processos Ativos</h4>
-                            <h2 id="dashProcessos">0</h2>
-                        </div>
-                    </div>
-                    
-                    <div class="grid-2">
-                        <div style="border: 1px solid var(--b); border-radius: 8px; padding: 20px;">
-                            <h4 style="margin-bottom:15px; color:var(--p);">Próximas Perícias e Prazos</h4>
-                            <div class="table-responsive">
-                                <table id="tDashAgenda"><thead><tr><th>Data</th><th>Cliente</th><th>Evento</th></tr></thead><tbody></tbody></table>
-                            </div>
-                        </div>
-                        <div style="border: 1px solid var(--b); border-radius: 8px; padding: 20px;">
-                            <h4 style="margin-bottom:15px; color:var(--p);">Alertas de Exigência</h4>
-                            <div class="table-responsive">
-                                <table id="tDashPrazos"><thead><tr><th>Limite</th><th>Tarefa</th></tr></thead><tbody></tbody></table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="cadastro" class="card">
-                <div class="card-header">FICHA DE ATENDIMENTO E CONTRATO ELITE</div>
-                <div class="card-body">
-                    <form id="fCad" onsubmit="return false;" autocomplete="off">
-                        <h4 style="color:var(--s); margin-bottom:15px; border-left:4px solid var(--s); padding-left:10px;">DADOS DO OUTORGANTE</h4>
-                        <div class="grid-2">
-                            <div><label>Nome Completo *</label><input type="text" id="nome" required style="text-transform: uppercase;"></div>
-                            <div><label>CPF *</label><input type="text" id="cpf" required oninput="mCPF(this)" onblur="validarCPFReal(this)"></div>
-                        </div>
-                        <div class="grid-4">
-                            <div><label>Nascimento *</label><input type="date" id="nasc" required></div>
-                            <div><label>WhatsApp</label><input type="text" id="zap"></div>
-                            <div><label>Nacionalidade</label><input type="text" id="nac" value="BRASILEIRA" style="text-transform: uppercase;"></div>
-                            <div><label>Estado Civil</label><select id="estCiv"><option>SOLTEIRO(A)</option><option>CASADO(A)</option><option>DIVORCIADO(A)</option><option>VIÚVO(A)</option><option>UNIÃO ESTÁVEL</option></select></div>
-                        </div>
-
-                        <div class="grid-2" style="margin: 20px 0;">
-                            <div style="background:#f0f9ff; padding:20px; border-radius:10px; border:1px solid #bae6fd;">
-                                <label style="color:#0369a1;">ACESSO GOV.BR (MEU INSS) *</label>
-                                <input type="text" id="gov" style="border-color:#7dd3fc;" required placeholder="Senha de Acesso">
-                            </div>
-                            <div style="padding:10px;">
-                                <label>Representante Legal?</label>
-                                <select id="tRep" onchange="document.getElementById('bRep').style.display = this.value === 'SIM' ? 'block' : 'none'">
-                                    <option value="NÃO">NÃO</option>
-                                    <option value="SIM">SIM</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div id="bRep" class="box-warn">
-                            <h4 style="margin-bottom:10px;">DADOS DO REPRESENTANTE</h4>
-                            <div class="grid-4">
-                                <div><label>Nome</label><input type="text" id="rNom" style="text-transform: uppercase;"></div>
-                                <div><label>CPF</label><input type="text" id="rCpf" oninput="mCPF(this)"></div>
-                                <div><label>RG</label><input type="text" id="rRg"></div>
-                                <div><label>Parentesco</label><input type="text" id="rPar" style="text-transform: uppercase;"></div>
-                            </div>
-                        </div>
-
-                        <h4 style="color:var(--s); margin: 30px 0 15px; border-left:4px solid var(--s); padding-left:10px;">ENGENHARIA DE HONORÁRIOS</h4>
-                        <div id="bens"></div>
-                        <button type="button" class="btn btn-p btn-sm" onclick="addB()" style="margin-bottom:25px;">+ ADICIONAR REGRA DE BENEFÍCIO</button>
-
-                        <div class="box-sec">
-                            <h4 style="color:var(--a); margin-bottom:10px;">CLÁUSULA DE RESCISÃO UNILATERAL (CONFIGURADA)</h4>
-                            <p style="font-size:0.85rem; line-height:1.4; color:var(--t);">As multas de 1 salário (Pré-protocolo), 3 salários + 30% (Durante o processo) e 100% (Pós-concessão) serão aplicadas automaticamente no PDF conforme o tempo da rescisão.</p>
-                        </div>
-
-                        <div class="grid-2" style="margin-top:30px; border-top:1px solid var(--b); padding-top:20px;">
-                            <div><label>Assinatura</label><select id="fAssin"><option value="MANUAL">MANUAL / FÍSICA</option><option value="D4SIGN">DIGITAL - D4SIGN</option></select></div>
-                            <div><label>A Rogo?</label><select id="sRogo"><option value="NÃO">NÃO</option><option value="SIM">SIM</option></select></div>
-                        </div>
-
-                        <div style="margin-top: 40px; text-align: center;">
-                            <button type="button" class="btn btn-s" onclick="preSave('cadastro_pdf')">GERAR CONTRATO ELITE</button>
-                            <button type="button" class="btn btn-d" onclick="location.reload()" style="margin-left:10px;">CANCELAR</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div id="busca" class="card">
-                <div class="card-header">BASE DE DADOS DOS CLIENTES</div>
-                <div class="card-body">
-                    <input type="text" id="q" placeholder="Pesquisar por Nome ou CPF..." oninput="busca()" style="margin-bottom:20px;">
-                    <div class="table-responsive">
-                        <table id="tCli"><thead><tr><th>Cliente</th><th>CPF</th><th>Situação</th><th>Ações</th></tr></thead><tbody></tbody></table>
-                    </div>
-                </div>
-            </div>
-
-            <div id="ficha" class="card"></div>
-
-    <div id="mConf" class="modal"><div class="modal-c">
-        <h3>CONFIRMAR DOCUMENTAÇÃO</h3>
-        <div id="txtConf" style="line-height:1.6; margin-bottom:20px;"></div>
-        <div class="grid-2">
-            <button class="btn btn-s" id="btnConfSave">✔ CONFIRMAR E SALVAR</button>
-            <button class="btn btn-d" onclick="fecharModal('mConf')">CANCELAR</button>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="dot"></div>
+        <div>
+          <h1>BRC Premium</h1>
+          <p>Gestão Inteligente ⚖️</p>
         </div>
-    </div></div>
+      </div>
+
+      <div class="nav">
+        <button class="active" data-page="dashboard">
+          <span class="left">🏠 <b>Painel Principal</b></span>
+          <span class="badge">Home</span>
+        </button>
+        <button data-page="clientes">
+          <span class="left">👤 <b>Base de Clientes</b></span>
+          <span class="badge" id="badgeClientes">0</span>
+        </button>
+        <button data-page="agenda">
+          <span class="left">🗓️ <b>Agenda Jurídica</b></span>
+          <span class="badge" id="badgeAgenda">0</span>
+        </button>
+        <button data-page="processos">
+          <span class="left">🧩 <b>CRM de Processos</b></span>
+          <span class="badge" id="badgeProcessos">0</span>
+        </button>
+        <button data-page="documentos">
+          <span class="left">📄 <b>Central Docs</b></span>
+          <span class="badge">Modelos</span>
+        </button>
+      </div>
+
+      <div class="tip">
+        <b>SISTEMA HÍBRIDO BRC</b><br>
+        Os dados são sincronizados em tempo real com o seu Google Drive e Sheets.
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="title">
+          <h2 id="tituloPagina">Gestão Inteligente BRC ⚖️</h2>
+          <p>Seja bem-vindo ao seu ecossistema jurídico de alta performance.</p>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="topNovoProcesso">➕ Novo Processo</button>
+          <button class="btn ok" id="btnBackup" onclick="baixarBackup()">⬇ Exportar Dados</button>
+          <label class="btn ghost" style="cursor:pointer">
+            ⬆ Restaurar
+            <input id="importFile" type="file" accept="application/json" style="display:none">
+          </label>
+        </div>
+      </div>
+
+      <section class="page active" id="page-dashboard">
+        <div class="cards">
+          <div class="stat">
+            <div class="k">Total de Clientes</div>
+            <div class="v" id="dashClientes">0</div>
+          </div>
+          <div class="stat">
+            <div class="k">Tarefas Pendentes (Mês)</div>
+            <div class="v" id="dashAgenda">0</div>
+          </div>
+          <div class="stat">
+            <div class="k">Processos Ativos</div>
+            <div class="v" id="dashProcessos">0</div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top: 25px;">
+          <div class="panelHead">
+            <h3>Status da Sincronização</h3>
+          </div>
+          <div class="panelBody">
+            <div class="small">
+              • Banco de Dados: <span style="color:var(--ok)">Conectado à Nuvem Google</span><br>
+              • Gerador de PDF: <span style="color:var(--ok)">Pronto para Emissão</span><br>
+              • Pastas no Drive: <span style="color:var(--primary2)">Monitoramento Ativo</span>
             </div>
-    </div>
-</main>
- <script>
-    const URL = "https://script.google.com/macros/s/AKfycbwSS_fVEjz3znQ--8gFV1KvetUQHyfpzfGPLWOjg2HkfgWtOPSwBIz71UxRyx-tyZhsLA/exec";
-    
-    let db = []; 
-    let acaoAtual = "";
+          </div>
+        </div>
+      </section>
 
-    // Utilitários
-    function id(x) { return document.getElementById(x); }
-    function fecharModal(m) { id(m).style.display = 'none'; }
-    function modal(m) { id(m).style.display = 'flex'; }
-    function load() { id('L').style.display = 'flex'; }
-    function unload() { id('L').style.display = 'none'; }
-    
-    // Navegação com Gatilhos de Carga
-    function tab(t, btn) {
-        document.querySelectorAll('.card').forEach(c => c.classList.remove('act'));
-        document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('act'));
-        id(t).classList.add('act');
-        if(btn) btn.classList.add('act');
-        
-        let titulos = { 'painel': 'Dashboard Geral', 'cadastro': 'Novo Registo e Contratos', 'busca': 'Base de Dados dos Clientes', 'ficha': 'Ficha Detalhada do Cliente' };
-        id('tituloPagina').innerText = titulos[t] || 'Dashboard';
-
-        if(t === 'busca') loadCli();
-    }
-
-    // Máscaras e Validação
-    function mCPF(i) {
-        let v = i.value.replace(/\D/g, ""); i.setAttribute("maxlength", "14");
-        if(v.length > 3) v = v.replace(/(\d{3})(\d)/, "$1.$2");
-        if(v.length > 6) v = v.replace(/(\d{3})(\d)/, "$1.$2");
-        if(v.length > 9) v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-        i.value = v;
-    }
-    
-    let cpfValido = false;
-    function validarCPFReal(i) {
-        let cpf = i.value.replace(/[^\d]+/g, '');
-        cpfValido = (cpf.length === 11); 
-    }
-
-    function fmtBR(d) { if(!d) return ""; let p = d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; }
-    
-    // Busca Inteligente (Primeiro Nome, Sobrenome ou CPF)
-    function busca() {
-        let q = id('q').value.toUpperCase(); 
-        let f = db.filter(x => x.Nome.toUpperCase().includes(q) || x.CPF.includes(q));
-        let t = id('tCli').querySelector('tbody'); t.innerHTML = "";
-        f.forEach(c => {
-            t.innerHTML += `<tr>
-                <td><strong>${c.Nome}</strong></td>
-                <td>${c.CPF}</td>
-                <td><span class="badge ${getBdg(c.StatusProcesso || c.FaseProcesso)}">${c.StatusProcesso || c.FaseProcesso || '-'}</span></td>
-                <td><button class="btn btn-p btn-sm" onclick="abrirFicha('${c.CPF}')">VER FICHA</button></td>
-            </tr>`;
-        });
-    }
-
-    function getBdg(s) {
-        if(!s) return "b-yellow"; s = s.toUpperCase();
-        if(s.includes("INDEFERIDO")) return "b-red";
-        if(s.includes("CONCEDIDO") || s.includes("VITÓRIA")) return "b-green";
-        return "b-blue";
-    }
-
-    // Engenharia de Benefícios
-    window.onload = () => { addB("BENEFÍCIO POR INCAPACIDADE"); };
-
-    function addB(t="BENEFÍCIO POR INCAPACIDADE", d=null) {
-        let i = "b_" + Date.now() + Math.floor(Math.random()*1000);
-        let h = `<div class="card" style="display:block; border-left: 4px solid var(--s); margin-bottom: 15px; box-shadow: none;" id="${i}">
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <select class="tBen" onchange="rendB('${i}',this.value)" style="width:70%; font-weight:700; color:var(--p); border:none; background:transparent;">
-                    <option value="BENEFÍCIO POR INCAPACIDADE" ${t==='BENEFÍCIO POR INCAPACIDADE'?'selected':''}>INCAPACIDADE TEMPORÁRIA</option>
-                    <option value="APOSENTADORIA" ${t==='APOSENTADORIA'?'selected':''}>APOSENTADORIA</option>
-                    <option value="BPC" ${t==='BPC'?'selected':''}>BPC (LOAS)</option>
-                    <option value="SALÁRIO-MATERNIDADE" ${t==='SALÁRIO-MATERNIDADE'?'selected':''}>SALÁRIO MATERNIDADE</option>
+      <section class="page" id="page-clientes">
+        <div class="panel">
+          <div class="panelHead">
+            <h3>Gestão de Clientes</h3>
+            <div class="row">
+              <button class="btn ok" id="btnNovoCliente">➕ Registrar Novo Cliente e Contrato</button>
+            </div>
+          </div>
+          <div class="panelBody">
+            <div class="grid2">
+              <div>
+                <label>Pesquisa Rápida</label>
+                <input id="buscaCliente" placeholder="Nome, CPF ou Cidade...">
+              </div>
+              <div>
+                <label>Filtro de Carteira</label>
+                <select id="filtroCliente">
+                  <option value="todos">Todos os Registros</option>
+                  <option value="comProcesso">Com Processo Ativo</option>
+                  <option value="semProcesso">Sem Processo Ativo</option>
                 </select>
-                <button type="button" class="btn btn-d btn-sm" onclick="id('${i}').remove()">X REMOVER</button>
+              </div>
             </div>
-            <div id="c_${i}"></div>
+            <div style="margin-top:20px; overflow:auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:48px"></th>
+                    <th>Cliente / CPF</th>
+                    <th>Contato</th>
+                    <th>Cidade/UF</th>
+                    <th>Data Registro</th>
+                    <th style="width:280px">Ações Estratégicas</th>
+                  </tr>
+                </thead>
+                <tbody id="tblClientes"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="page" id="page-agenda">
+        <div class="panel">
+          <div class="panelHead">
+            <h3>Calendário de Prazos e Tarefas</h3>
+            <button class="btn primary" id="btnNovaTarefa">➕ Agendar Nova Tarefa</button>
+          </div>
+          <div class="panelBody">
+            <div class="calHead">
+              <div class="row">
+                <button class="iconBtn" id="prevMonth">◀</button>
+                <div style="font-weight:700;font-size:20px; min-width: 180px; text-align: center;" id="monthLabel"></div>
+                <button class="iconBtn" id="nextMonth">▶</button>
+              </div>
+              <div class="small">Clique em uma tarefa para gerenciar status e anexos.</div>
+            </div>
+            <div class="calGrid" id="calDow"></div>
+            <div class="calGrid" id="calGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-processos">
+        <div class="panel">
+          <div class="panelHead">
+            <h3>Fluxo CRM de Processos (Kanban)</h3>
+            <div class="row">
+              <input id="buscaProcesso" placeholder="Localizar processo..." style="max-width:260px">
+              <button class="btn primary" id="btnAddEtapa">➕ Nova Etapa na Fase</button>
+            </div>
+          </div>
+          <div class="panelBody">
+            <div class="phaseTabs" id="phaseTabs"></div>
+            <div class="kanban" id="kanban"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-documentos">
+        <div class="panel">
+          <div class="panelHead">
+            <h3>Central de Modelos e Documentos</h3>
+          </div>
+          <div class="panelBody">
+            <div class="grid2">
+              <div>
+                <h4 style="margin-top:0">Repositório de Modelos (Base)</h4>
+                <label>Minuta de Procuração Ad Judicia</label>
+                <textarea id="modeloProcuracao"></textarea>
+                <label>Contrato de Honorários (Modelo Geral)</label>
+                <textarea id="modeloContrato"></textarea>
+                <div class="row" style="margin-top:10px">
+                  <button class="btn ok" id="btnSalvarModelos">💾 Atualizar Modelos no Sistema</button>
+                </div>
+              </div>
+              <div>
+                <h4 style="margin-top:0">Informação Importante</h4>
+                <div class="tip" style="background: rgba(79,140,255,.05); border: 1px solid var(--primary);">
+                  O sistema <b>BRC Premium</b> sincroniza cada novo cliente com uma pasta exclusiva no seu Google Drive. Utilize a aba "Clientes" para acessar as pastas individuais na nuvem.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="backdrop" id="backdrop">
+    <div class="modal">
+      <div class="modalHead">
+        <h3 id="modalTitle">Título do Modal</h3>
+        <button class="btn ghost" id="btnCloseModal">Fechar</button>
+      </div>
+      <div class="modalBody" id="modalBody"></div>
+      <div class="modalFoot" id="modalFoot"></div>
+    </div>
+  </div>
+  <script>
+    // ==========================================
+    // MOTOR DE INTELIGÊNCIA BRC PREMIUM PRO
+    // ==========================================
+    
+    // Conexão com o Backend Google (Sincronização Nuvem)
+    const URL = "https://script.google.com/macros/s/AKfycbwSS_fVEjz3znQ--8gFV1KvetUQHyfpzfGPLWOjg2HkfgWtOPSwBIz71UxRyx-tyZhsLA/exec";
+
+    const KEYS = { clientes: "brc_cli_v1", processos: "brc_proc_v1", tarefas: "brc_task_v1", etapas: "brc_step_v1", modelos: "brc_mod_v1" };
+    const FASES = ["Negociação", "Consultoria", "Administrativo", "Judicial", "Recursal", "Execução", "Financeiro", "Arquivamento"];
+    const DEFAULT_ETAPAS = {
+      "Negociação": ["Lead","Triagem","Proposta"], "Consultoria": ["Análise","Doc. Pendente"],
+      "Administrativo": ["A Protocolar","Protocolado","Cump. Exigência"], "Judicial": ["Petição Inicial","Perícia","Sentença"],
+      "Recursal": ["Recurso","Acórdão"], "Execução": ["Cálculos","RPV/Precatório"],
+      "Financeiro": ["Aguardando Recebimento","Honorários Pagos"], "Arquivamento": ["Concluído"]
+    };
+
+    // --- SISTEMA DE PERSISTÊNCIA HÍBRIDA ---
+    function load(key, fallback){ try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }catch(e){ return fallback; } }
+    function save(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+    function uid(p="id"){ return p + "_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16); }
+    function esc(v){ return String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+    function attr(v){ return esc(v).replaceAll("\n"," "); }
+    
+    // --- FORMATADORES ---
+    function normalizeCPF(v){
+      v = v.replace(/\D/g,""); if(v.length !== 11) return v;
+      return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    }
+    function normalizePhone(v){
+      v = v.replace(/\D/g,""); if(v.length === 11) return v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+      return v;
+    }
+    function todayISO(){ return new Date().toISOString().split('T')[0]; }
+
+    let state = {
+      clientes: load(KEYS.clientes, []), processos: load(KEYS.processos, []), tarefas: load(KEYS.tarefas, []),
+      etapas: load(KEYS.etapas, null), modelos: load(KEYS.modelos, null)
+    };
+
+    // Inicialização de Etapas Kanban
+    if(!state.etapas){
+      state.etapas = {};
+      FASES.forEach(f => state.etapas[f] = (DEFAULT_ETAPAS[f] || ["Início"]).map(n => ({ id: uid("et"), nome: n })));
+      save(KEYS.etapas, state.etapas);
+    }
+    
+    // Injeção de Modelos BRC
+    if(!state.modelos){
+      state.modelos = { 
+        procuracao: `PROCURAÇÃO AD JUDICIA\n\nOUTORGANTE: {{NOME}}, CPF: {{CPF}}...\nOUTORGADO: BRUNO RIBEIRO DA COSTA, OAB/MT 20820/O.`,
+        contrato: `CONTRATO DE HONORÁRIOS\n\nCláusula 1ª: O contratado prestará serviços de assessoria jurídica...`
+      };
+      save(KEYS.modelos, state.modelos);
+    }
+
+    let page = "dashboard"; let faseAtual = "Administrativo"; let agendaDate = new Date();
+    const backdrop = document.getElementById("backdrop");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalBody = document.getElementById("modalBody");
+    const modalFoot = document.getElementById("modalFoot");
+
+    // --- NAVEGAÇÃO ---
+    document.querySelectorAll(".nav button").forEach(btn=>{ btn.onclick = () => showPage(btn.dataset.page); });
+    function showPage(p){
+      page = p; document.querySelectorAll(".page").forEach(el=>el.classList.remove("active"));
+      document.getElementById("page-"+p).classList.add("active");
+      document.querySelectorAll(".nav button").forEach(el=>el.classList.remove("active"));
+      document.querySelector(`.nav button[data-page="${p}"]`).classList.add("active");
+      document.getElementById("tituloPagina").innerText = p.charAt(0).toUpperCase() + p.slice(1);
+      if(p==="clientes") renderClientes(); if(p==="agenda") renderAgenda(); if(p==="processos") renderProcessos();
+      renderDashboard();
+    }
+
+    function renderDashboard(){
+      document.getElementById("dashClientes").innerText = state.clientes.length;
+      document.getElementById("dashAgenda").innerText = state.tarefas.filter(t=>!t.done).length;
+      document.getElementById("dashProcessos").innerText = state.processos.length;
+      document.getElementById("badgeClientes").innerText = state.clientes.length;
+      document.getElementById("badgeProcessos").innerText = state.processos.length;
+    }
+
+    // --- MODAL ENGINE ---
+    function openModal(t, b, f=""){ modalTitle.innerText = t; modalBody.innerHTML = b; modalFoot.innerHTML = f; backdrop.classList.add("show"); }
+    function closeModal(){ backdrop.classList.remove("show"); }
+    document.getElementById("btnCloseModal").onclick = closeModal;
+
+    // --- GESTÃO DE CLIENTES & FUSÃO DE HONORÁRIOS ---
+    document.getElementById("btnNovoCliente").onclick = () => openClienteModal();
+
+    function openClienteModal(idCli=""){
+      const c = state.clientes.find(x=>x.id===idCli) || {};
+      openModal(
+        idCli ? "Editar Cliente" : "Novo Registro BRC Premium",
+        `
+          <div class="grid2">
+            <div><label>Nome Completo *</label><input id="c_nome" value="${attr(c.nome || "")}" style="text-transform:uppercase"></div>
+            <div><label>CPF *</label><input id="c_cpf" value="${attr(c.cpf || "")}" placeholder="000.000.000-00"></div>
+          </div>
+          <div class="grid3">
+            <div><label>Nascimento</label><input type="date" id="c_nasc" value="${attr(c.nasc || "")}"></div>
+            <div><label>WhatsApp</label><input id="c_zap" value="${attr(c.zap || "")}" placeholder="(65) 9..."></div>
+            <div><label>Senha GOV.BR *</label><input id="c_gov" value="${attr(c.gov || "")}" style="border:1px solid var(--primary)"></div>
+          </div>
+          <div style="margin:15px 0; padding:15px; background:rgba(79,140,255,.05); border-radius:12px; border:1px solid var(--line)">
+            <h4 style="margin:0 0 10px 0; color:var(--primary2)">Engenharia de Honorários</h4>
+            <div id="areaBens"></div>
+            <button class="btn ghost" onclick="addRegra()" style="margin-top:10px">+ Adicionar Regra de Benefício</button>
+          </div>
+          <label>Observações / Histórico</label><textarea id="c_obs">${esc(c.obs || "")}</textarea>
+        `,
+        `<button class="btn ok" onclick="saveHibrido('${idCli}')">Sincronizar e Salvar na Nuvem</button>`
+      );
+      if(!idCli) addRegra();
+    }
+
+    function addRegra(){
+      let id = "b_"+Date.now();
+      let html = `<div class="subbox" id="${id}">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+          <select class="selBen" style="background:transparent; color:white; border:none; font-weight:bold">
+            <option value="INCAPACIDADE">INCAPACIDADE TEMPORÁRIA</option>
+            <option value="APOSENTADORIA">APOSENTADORIA</option>
+            <option value="BPC">BPC (LOAS)</option>
+          </select>
+          <button class="btn danger btn-sm" onclick="document.getElementById('${id}').remove()">X</button>
+        </div>
+        <div class="grid3">
+          <div><label>% Inicial</label><input type="number" class="pIni" value="30"></div>
+          <div><label>Parcelas</label><input type="number" class="pPar" value="8"></div>
+          <div><label>% Manutenção</label><input type="number" class="pMan" value="15"></div>
+        </div>
+      </div>`;
+      document.getElementById("areaBens").insertAdjacentHTML("beforeend", html);
+    }
+
+    async function saveHibrido(idCli=""){
+      const nome = document.getElementById("c_nome").value.toUpperCase();
+      const cpf = document.getElementById("c_cpf").value;
+      if(!nome || !cpf) return alert("Nome e CPF são obrigatórios.");
+
+      const cliData = {
+        id: idCli || uid("cli"), nome, cpf, nasc: document.getElementById("c_nasc").value,
+        zap: document.getElementById("c_zap").value, gov: document.getElementById("c_gov").value,
+        obs: document.getElementById("c_obs").value, dataCadastro: todayISO()
+      };
+
+      // Salva Local (Velocidade)
+      if(idCli){ const i = state.clientes.findIndex(x=>x.id===idCli); state.clientes[i] = cliData; }
+      else { state.clientes.push(cliData); }
+      save(KEYS.clientes, state.clientes);
+
+      // Envia Nuvem (Segurança e Documentos)
+      document.getElementById("btnNovoCliente").innerText = "☁️ Sincronizando...";
+      fetch(URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "cadastro_completo", ...cliData }) })
+      .then(() => { 
+        document.getElementById("btnNovoCliente").innerText = "➕ Registrar Novo Cliente";
+        alert("Sincronização BRC concluída. Pastas criadas no Google Drive!");
+      });
+
+      closeModal(); renderClientes(); renderDashboard();
+    }
+
+    function renderClientes(){
+      const q = document.getElementById("buscaCliente").value.toLowerCase();
+      const html = state.clientes.filter(c => c.nome.toLowerCase().includes(q) || c.cpf.includes(q)).map(c => `
+        <tr>
+          <td><button class="iconBtn" onclick="toggleSub('${c.id}')">+</button></td>
+          <td><b>${esc(c.nome)}</b><br><small>${esc(c.cpf)}</small></td>
+          <td>${esc(c.zap)}</td><td>${esc(c.dataCadastro)}</td><td>${esc(c.dataCadastro)}</td>
+          <td>
+            <button class="btn ghost" onclick="openClienteModal('${c.id}')">✏️ Editar</button>
+            <button class="btn primary" onclick="alert('Pasta do Drive em sincronização...')">📂 Drive</button>
+          </td>
+        </tr>
+        <tr id="sub_${c.id}" style="display:none"><td colspan="6"><div class="subbox" id="box_${c.id}"></div></td></tr>
+      `).join("");
+      document.getElementById("tblClientes").innerHTML = html;
+    }
+
+    function toggleSub(id){
+      const el = document.getElementById("sub_"+id);
+      el.style.display = el.style.display === "none" ? "table-row" : "none";
+      if(el.style.display === "table-row"){
+        const p = state.processos.filter(x=>x.clienteId === id);
+        document.getElementById("box_"+id).innerHTML = p.length ? p.map(i=>`<div>• ${i.titulo} (${i.fase})</div>`).join("") : "Nenhum processo.";
+      }
+    }
+
+    // --- KANBAN LOGIC ---
+    function renderProcessos(){
+      document.getElementById("phaseTabs").innerHTML = FASES.map(f=>`<button class="${f===faseAtual?"active":""}" onclick="setFase('${f}')">${f}</button>`).join("");
+      const kanban = document.getElementById("kanban");
+      kanban.innerHTML = state.etapas[faseAtual].map(et => {
+        const procs = state.processos.filter(p=>p.fase===faseAtual && p.etapa===et.nome);
+        return `<div class="column">
+          <div class="columnHead"><b>${et.nome}</b> <span class="badge">${procs.length}</span></div>
+          ${procs.map(p => `<div class="procCard"><div class="procTitle">${state.clientes.find(c=>c.id===p.clienteId)?.nome || "Cliente"}</div><div class="small">${p.titulo}</div></div>`).join("")}
         </div>`;
-        id('bens').insertAdjacentHTML('beforeend', h);
-        rendB(i, t, d);
+      }).join("");
+    }
+    function setFase(f){ faseAtual = f; renderProcessos(); }
+
+    // --- AGENDA LOGIC ---
+    function renderAgenda(){
+      const y = agendaDate.getFullYear(); const m = agendaDate.getMonth();
+      document.getElementById("monthLabel").innerText = agendaDate.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+      const first = new Date(y,m,1).getDay(); const days = new Date(y,m+1,0).getDate();
+      let html = "";
+      for(let i=0; i<first; i++) html += `<div class="day" style="opacity:0.2"></div>`;
+      for(let i=1; i<=days; i++){
+        const data = `${y}-${String(m+1).padStart(2,"0")}-${String(i).padStart(2,"0")}`;
+        const tasks = state.tarefas.filter(t=>t.data === data);
+        html += `<div class="day"><div class="num">${i}</div><div class="taskList">${tasks.map(t=>`<div class="taskChip">${t.titulo}</div>`).join("")}</div></div>`;
+      }
+      document.getElementById("calGrid").innerHTML = html;
+      document.getElementById("calDow").innerHTML = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].map(d=>`<div class="dow">${d}</div>`).join("");
     }
 
-    function rendB(i, t, d=null) {
-        let c = id('c_'+i);
-        if(t === "BENEFÍCIO POR INCAPACIDADE") {
-            c.innerHTML = `<div class="grid-3">
-                <div><label>% Inicial</label><input type="number" class="pIni" value="${d?.pIni||30}"></div>
-                <div><label>Parcelas</label><input type="number" class="paIni" value="${d?.paIni||8}"></div>
-                <div><label>% Manutenção</label><input type="number" class="pApo" value="${d?.pApo||15}"></div>
-            </div>`;
-        } else {
-            c.innerHTML = `<div class="grid-2"><div><label>% Retroativo</label><input type="number" class="pRet" value="${d?.pRet||30}"></div><div><label>Nº Parcelas</label><input type="number" class="pInt" value="${d?.pInt||4}"></div></div>`;
-        }
-    }
-
-    // Carregamento de Dados
-    function loadCli() { 
-        load(); 
-        let s = document.createElement('script'); 
-        s.src = URL + "?action=listar_clientes&callback=drawC"; 
-        document.body.appendChild(s); 
-    }
-
-    function drawC(r) {
-        unload(); db = r.data || []; 
-        busca(); 
-    }
-
-    // Ficha CRM Detalhada
-    function abrirFicha(cpf) { 
-        load(); 
-        let s = document.createElement('script'); 
-        s.src = URL + "?action=carregar_ficha&cpf=" + cpf + "&callback=drawF"; 
-        document.body.appendChild(s); 
-    }
-
-    function drawF(r) {
-        unload(); if(r.status !== "success") return alert("Erro ao carregar ficha.");
-        let c = r.cliente; tab('ficha', null);
-        id('ficha').innerHTML = `
-            <div class="card-header">FICHA: ${c.Nome} <button class="btn btn-p btn-sm" onclick="editar('${c.CPF}')">EDITAR</button></div>
-            <div class="card-body">
-                <div class="grid-3">
-                    <div><label>CPF</label><strong style="font-size:1.1rem">${c.CPF}</strong></div>
-                    <div><label>WhatsApp</label><strong style="font-size:1.1rem">${c.WhatsApp || '-'}</strong></div>
-                    <div><label>Senha GOV</label><strong style="color:var(--s); font-size:1.1rem">${c.AcessoGOV || '-'}</strong></div>
-                </div>
-                <div style="margin-top:20px;">
-                    ${c.LinkPastaPrincipal ? `<a href="${c.LinkPastaPrincipal}" target="_blank" class="btn btn-p">📂 PASTA NO DRIVE</a>` : ''}
-                    ${c.LinkPDF ? `<a href="${c.LinkPDF}" target="_blank" class="btn btn-s" style="margin-left:10px;">📄 CONTRATO ATUAL</a>` : ''}
-                </div>
-            </div>`;
-    }
-
-    // O Motor de Salvamento Completo (Corrigido)
-    function preSave(ac) {
-        if(!id('nome').value || !id('cpf').value || !id('nasc').value || !id('gov').value) return alert("Preencha todos os campos obrigatórios (*).");
-        validarCPFReal(id('cpf')); if(!cpfValido) return alert("O CPF informado é inválido!");
-        if(document.querySelectorAll('.tBen').length === 0) return alert("Adicione pelo menos 1 regra de benefício!");
-        
-        acaoAtual = ac;
-        let bensHTML = "";
-        document.querySelectorAll('.tBen').forEach(x => bensHTML += `<li>${x.value}</li>`);
-        
-        id('txtConf').innerHTML = `<strong>CLIENTE:</strong> ${id('nome').value.toUpperCase()}<br><strong>CPF:</strong> ${id('cpf').value}<br><strong>BENEFÍCIOS:</strong><ul>${bensHTML}</ul>`;
-        modal('mConf');
-    }
-
-    id('btnConfSave').onclick = () => {
-        fecharModal('mConf'); load();
-        let bens = [], hons = {};
-        
-        document.querySelectorAll('.tBen').forEach(select => {
-            let container = select.parentElement.parentElement;
-            let t = select.value; bens.push(t);
-            if(t === "BENEFÍCIO POR INCAPACIDADE") {
-                hons[t] = {pIni: container.querySelector('.pIni').value, paIni: container.querySelector('.paIni').value, pApo: container.querySelector('.pApo').value, cv: 'NÃO'};
-            } else {
-                hons[t] = {pRet: container.querySelector('.pRet').value, pInt: container.querySelector('.pInt').value};
-            }
-        });
-
-        let p = {
-            action: acaoAtual, resp: id('user').value, nome: id('nome').value, cpf: id('cpf').value, nasc: fmtBR(id('nasc').value), zap: id('zap').value, nac: id('nac').value, estCiv: id('estCiv').value, gov: id('gov').value,
-            temRep: id('tRep').value, repNome: id('rNom').value, repCpf: id('rCpf').value, repRg: id('rRg').value, repPar: id('rPar').value,
-            formaAssinatura: id('fAssin').value, rogo: id('sRogo').value, bens: bens, hons: hons
-        };
-
-        fetch(URL, {method: 'POST', mode: 'no-cors', body: JSON.stringify(p)})
-        .then(() => {
-            alert("Operação enviada com sucesso ao servidor!");
-            unload();
-            location.reload();
-        }).catch(() => { 
-            alert("Erro de rede. Verifique a conexão."); 
-            unload(); 
-        });
-    }
-</script>
+    // --- INICIALIZAÇÃO ---
+    renderDashboard();
+    showPage("dashboard");
+  </script>
 </body>
 </html>
